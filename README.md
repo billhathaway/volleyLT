@@ -23,6 +23,7 @@ Running volleyLT with multiple agents (but not etcd)
 3. volleyCli -agents localhost:9875,localhost:9876
 
 Running volleyLT with multiple agents registered in etcd (assumes local etcd)
+--
 1. volleyAgent -port 9875 -etcd &
 2. volleyAgent -port 9876 -etcd &
 3. volleyAgent -port 9877 -etcd &
