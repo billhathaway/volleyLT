@@ -7,6 +7,6 @@ import (
 
 type (
 	reporter interface {
-		report(*volley.SessionResponse) string
+		report([]*volley.SessionResponse) string
 	}
 )
