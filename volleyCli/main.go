@@ -16,11 +16,13 @@ func main() {
 	requests := flag.Int("n", 10, "number of requests")
 	concurrency := flag.Int("c", 1, "amount of concurrency")
 	keepAlive := flag.Bool("k", false, "use HTTP keepalive")
-	agentCount := flag.Int("agentCount", 1, "number of agents to use")
+	agentCount := flag.Int("agentCount", 1, "number of agents to use (only needs to be set when using etcd)")
 	agents := flag.String("agents", "localhost:9876", "csv of server:port pairs")
 	etcdServers := flag.String("etcdServers", "http://localhost:4001", "csv of etcd URLs")
 	etcdPath := flag.String("etcdPath", "/volleyAgent", "etcd path for registered agents")
 	useEtcd := flag.Bool("etcd", false, "use etcd for agents (otherwise specify with -agents)")
+	full := flag.Bool("full", false, "show full results")
+	sum := flag.Bool("sum", true, "show summary results")
 	flag.Parse()
 	var servers []string
 
@@ -35,6 +37,9 @@ func main() {
 		}
 	} else {
 		servers = strings.Split(*agents, ",")
+		if *agentCount == 1 && len(servers) > 1 {
+			*agentCount = len(servers)
+		}
 	}
 
 	if *agentCount > len(servers) {
@@ -70,9 +75,14 @@ func main() {
 		}(i)
 	}
 	wg.Wait()
-	raw := &rawReporter{}
-	stats := &statReporter{}
 
-	fmt.Println(raw.report(responses))
-	fmt.Println(stats.report(responses))
+	if *full {
+		raw := &rawReporter{}
+		fmt.Println(raw.report(responses))
+	}
+	if *sum {
+		stats := &statReporter{}
+		fmt.Println(stats.report(responses))
+	}
+
 }
