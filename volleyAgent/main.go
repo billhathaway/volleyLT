@@ -3,14 +3,21 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/coreos/go-etcd/etcd"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
+	"strings"
 	"sync"
 	"time"
+)
+
+const (
+	etcdTTLsecs = 30
 )
 
 type (
@@ -105,9 +112,35 @@ func (c *Controller) Execute(vRequest VolleyRequest, vResponse *VolleyResponse) 
 	return nil
 }
 
+func updateEtcd(etcdPath string, etcdServers string, port string) {
+	hostname, err := os.Hostname()
+
+	if err != nil {
+		log.Fatal("Error cannot get hostname - %s\n", err.Error())
+	}
+
+	client := etcd.NewClient(strings.Split(etcdServers, ","))
+	ticker := time.NewTicker(etcdTTLsecs * time.Second)
+
+	for {
+		<-ticker.C
+		_, err := client.Set(fmt.Sprintf("%s/%s:%s", etcdPath, hostname, port), port, etcdTTLsecs+1)
+		if err != nil {
+			log.Fatalf("Error updating etcd %s", err.Error())
+		}
+	}
+}
+
 func main() {
 	port := flag.String("port", "9876", "rpc listen port")
+	etcdServers := flag.String("etcdServers", "http://localhost:4001", "csv of etcd URLs")
+	etcdPath := flag.String("etcdPath", "/volleyAgent", "etcd path for to register on")
+	useEtcd := flag.Bool("etcd", false, "register with etcd")
 	flag.Parse()
+	if *useEtcd {
+		go updateEtcd(*etcdPath, *etcdServers, *port)
+	}
+
 	controller := NewController()
 	rpc.Register(controller)
 	rpc.HandleHTTP()

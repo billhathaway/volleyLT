@@ -18,7 +18,7 @@ func main() {
 	keepAlive := flag.Bool("k", false, "use HTTP keepalive")
 	agentCount := flag.Int("agentCount", 1, "number of agents to use")
 	agents := flag.String("agents", "localhost:9876", "csv of server:port pairs")
-	etcdServers := flag.String("etcdServers", "http://localhost:4001", "csv of etcd server:port pairs")
+	etcdServers := flag.String("etcdServers", "http://localhost:4001", "csv of etcd URLs")
 	etcdPath := flag.String("etcdPath", "/volleyAgent", "etcd path for registered agents")
 	useEtcd := flag.Bool("etcd", false, "use etcd for agents (otherwise specify with -agents)")
 	flag.Parse()
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	if *agentCount > len(servers) {
-		log.Fatalf("ERROR: wanted %d agents but only able to find %d (%v)\n", *agentCount, len(servers), servers)
+		log.Fatalf("Error wanted %d agents but only able to find %d (%v)\n", *agentCount, len(servers), servers)
 	}
 
 	loadTestRequest := volley.Request{
