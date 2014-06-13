@@ -12,7 +12,7 @@ Running with a single agent
 1. go get github.com/billhathaway/volleyLT/volleyAgent
 2. go get github.com/billhathaway/volleyLT/volleyCli
 3. volleyAgent & # start agent on default port
-4. volleyCli     # run a mini load test
+4. volleyCli http://localhost/    # run a mini load test
 5. volleyCli -h  # to see options
 
 Running with multiple agents (but not etcd)
@@ -20,7 +20,7 @@ Running with multiple agents (but not etcd)
 1. pkill -f volleyAgent # make sure none are running
 2. volleyAgent -port 9875 &
 3. volleyAgent -port 9876 &
-4. volleyCli -agents localhost:9875,localhost:9876
+4. volleyCli -agents localhost:9875,localhost:9876 http://localhost/
 
 Running with multiple agents registered in a local etcd
 --
@@ -28,7 +28,7 @@ Running with multiple agents registered in a local etcd
 2. volleyAgent -port 9875 -etcd &
 3. volleyAgent -port 9876 -etcd &
 4. volleyAgent -port 9877 -etcd &
-5. volleyCli -agentCount 2 -etcd  # picks 2 out of the 3 agents registered with etcd
+5. volleyCli -agentCount 2 -etcd http://localhost/  # picks 2 out of the 3 agents registered with etcd
 
 
 
