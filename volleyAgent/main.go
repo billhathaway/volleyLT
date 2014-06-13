@@ -127,10 +127,7 @@ func updateEtcd(etcdPath string, etcdServers string, port string) {
 		ipAddr = "127.0.0.1"
 	}
 
-	if err != nil {
-		log.Fatal("Error cannot get hostname - %s\n", err.Error())
-	}
-
+	log.Printf("event=etcdRegister etcdPath=%s etcdServers=%s", etcdPath, etcdServers)
 	client := etcd.NewClient(strings.Split(etcdServers, ","))
 	_, err = client.Set(fmt.Sprintf("%s/%s:%s", etcdPath, ipAddr, port), port, etcdTTLsecs+1)
 	if err != nil {
