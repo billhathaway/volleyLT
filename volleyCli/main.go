@@ -23,6 +23,7 @@ func main() {
 	useEtcd := flag.Bool("etcd", false, "use etcd for agents (otherwise specify with -agents)")
 	full := flag.Bool("full", false, "show full results")
 	sum := flag.Bool("sum", true, "show summary results")
+	verbose := flag.Bool("v", false, "verbose logging")
 	flag.Parse()
 	var servers []string
 
@@ -60,6 +61,9 @@ func main() {
 	for i := 0; i < *agentCount; i++ {
 		go func(i int) {
 			loadTestResponse := &volley.SessionResponse{}
+			if *verbose {
+				log.Printf("connecting to %s\n", servers[i])
+			}
 			client, err := rpc.DialHTTP("tcp", servers[i])
 			if err != nil {
 				log.Fatal("dialing:", err)
@@ -67,6 +71,9 @@ func main() {
 			err = client.Call("Controller.Execute", loadTestRequest, loadTestResponse)
 			if err != nil {
 				log.Fatal("calling %s returned :", servers[i], err)
+			}
+			if *verbose {
+				log.Printf("received response from %s\n", servers[i])
 			}
 			mutex.Lock()
 			responses[i] = loadTestResponse

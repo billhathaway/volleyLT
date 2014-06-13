@@ -51,8 +51,8 @@ type (
 	}
 )
 
-func NewController() *Controller {
-	return &Controller{log.New(os.Stdout, "volleyAgent ", log.LstdFlags)}
+func NewController(port string) *Controller {
+	return &Controller{log.New(os.Stdout, fmt.Sprintf("volleyAgent:port=%s ", port), log.LstdFlags)}
 }
 
 func (c *Controller) worker(id int, wg *sync.WaitGroup, tr *http.Transport, urlChan chan string, statusChan chan Response) {
@@ -141,7 +141,7 @@ func main() {
 		go updateEtcd(*etcdPath, *etcdServers, *port)
 	}
 
-	controller := NewController()
+	controller := NewController(*port)
 	rpc.Register(controller)
 	rpc.HandleHTTP()
 	l, err := net.Listen("tcp", ":"+*port)
