@@ -127,7 +127,7 @@ func updateEtcd(etcdPath string, etcdServers string, port string) {
 		ipAddr = "127.0.0.1"
 	}
 
-	log.Printf("event=etcdRegister etcdPath=%s etcdServers=%s", etcdPath, etcdServers)
+	log.Printf("event=etcdRegister etcdPath=%s etcdServers=%s key=%s:%s", etcdPath, etcdServers, ipAddr, port)
 	client := etcd.NewClient(strings.Split(etcdServers, ","))
 	_, err = client.Set(fmt.Sprintf("%s/%s:%s", etcdPath, ipAddr, port), port, etcdTTLsecs+1)
 	if err != nil {
