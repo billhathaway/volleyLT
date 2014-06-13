@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	etcdTTLsecs = 30
+	etcdTTLsecs = 10
 )
 
 type (
@@ -112,18 +112,34 @@ func (c *Controller) Execute(vRequest VolleyRequest, vResponse *VolleyResponse) 
 }
 
 func updateEtcd(etcdPath string, etcdServers string, port string) {
-	hostname, err := os.Hostname()
+	var ipAddr string
+	addresses, err := net.InterfaceAddrs()
+	// on the client side, net.Dial wants IPv6 addresses to be enclosed in []
+	for _, addr := range addresses {
+		if !strings.HasPrefix(addr.String(), "127.") && !strings.Contains(addr.String(), "::") {
+			ipAddr = strings.Split(addr.String(), "/")[0]
+			break
+		}
+	}
+
+	// localhost as last resort
+	if ipAddr == "" {
+		ipAddr = "127.0.0.1"
+	}
 
 	if err != nil {
 		log.Fatal("Error cannot get hostname - %s\n", err.Error())
 	}
 
 	client := etcd.NewClient(strings.Split(etcdServers, ","))
+	_, err = client.Set(fmt.Sprintf("%s/%s:%s", etcdPath, ipAddr, port), port, etcdTTLsecs+1)
+	if err != nil {
+		log.Fatalf("Error updating etcd %s", err.Error())
+	}
 	ticker := time.NewTicker(etcdTTLsecs * time.Second)
-
 	for {
 		<-ticker.C
-		_, err := client.Set(fmt.Sprintf("%s/%s:%s", etcdPath, hostname, port), port, etcdTTLsecs+1)
+		_, err = client.Set(fmt.Sprintf("%s/%s:%s", etcdPath, ipAddr, port), port, etcdTTLsecs+1)
 		if err != nil {
 			log.Fatalf("Error updating etcd %s", err.Error())
 		}
