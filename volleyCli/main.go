@@ -45,7 +45,11 @@ func main() {
 		os.Exit(1)
 
 	}
+
 	url = flag.Arg(0)
+	if !strings.HasPrefix(url, "http") {
+		url = "http://" + url
+	}
 
 	var servers []string
 
@@ -86,13 +90,16 @@ func main() {
 			if verbose {
 				log.Printf("connecting to %s\n", servers[i])
 			}
-			client, err := rpc.DialHTTP("tcp", servers[i])
+			client, err := rpc.Dial("tcp", servers[i])
 			if err != nil {
 				log.Fatal("dialing:", err)
 			}
 			err = client.Call("Controller.Execute", loadTestRequest, loadTestResponse)
+			log.Println("returned from client.call")
 			if err != nil {
-				log.Fatal("calling %s returned :", servers[i], err)
+				log.Fatal("calling %s returned :%s", servers[i], err.Error())
+			} else {
+				log.Printf("calling %s returned ok\n", servers[i])
 			}
 			if verbose {
 				log.Printf("received response from %s\n", servers[i])
@@ -104,7 +111,9 @@ func main() {
 		}(i)
 	}
 	wg.Wait()
-
+	if verbose {
+		log.Println("generating reports")
+	}
 	if fullReport {
 		raw := &rawReporter{}
 		fmt.Println(raw.report(responses))

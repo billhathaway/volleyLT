@@ -27,6 +27,6 @@ type (
 		Duration   time.Duration
 		Bytes      int
 		StatusCode int
-		Error      error
+		Error      string
 	}
 )

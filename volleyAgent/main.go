@@ -47,7 +47,7 @@ type (
 		Duration   time.Duration
 		Bytes      int
 		StatusCode int
-		Error      error
+		Error      string
 	}
 )
 
@@ -57,19 +57,18 @@ func NewController(port string) *Controller {
 
 func (c *Controller) worker(id int, wg *sync.WaitGroup, tr *http.Transport, urlChan chan string, statusChan chan Response) {
 	var vResponse Response
-	var httpResponse *http.Response
-	var err error
 	var content []byte
 	client := &http.Client{Transport: tr}
 	c.log.Printf("event=workerStart id=%d\n", id)
 	for url := range urlChan {
 		vResponse.Url = url
 		vResponse.StartTime = time.Now()
-		httpResponse, err = client.Get(url)
+		httpResponse, err := client.Get(url)
 		if err != nil {
-			vResponse.Error = err
+			vResponse.Error = err.Error()
 			vResponse.Duration = time.Since(vResponse.StartTime)
 			statusChan <- vResponse
+			c.log.Printf("Received error response: %s\n", err.Error())
 			continue
 		}
 		content, _ = ioutil.ReadAll(httpResponse.Body)
@@ -143,10 +142,14 @@ func main() {
 
 	controller := NewController(*port)
 	rpc.Register(controller)
-	rpc.HandleHTTP()
+
 	l, err := net.Listen("tcp", ":"+*port)
 	if err != nil {
 		log.Fatal("listen error:", err)
 	}
-	http.Serve(l, nil)
+
+	for {
+		conn, _ := l.Accept()
+		go rpc.ServeConn(conn)
+	}
 }
